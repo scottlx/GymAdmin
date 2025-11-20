@@ -1,6 +1,6 @@
 import React from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
-import { Layout, Menu } from 'antd'
+import { Layout, Menu, Button, Space } from 'antd'
 import {
   DashboardOutlined,
   UserOutlined,
@@ -9,12 +9,20 @@ import {
   CalendarOutlined,
   CheckCircleOutlined,
   GiftOutlined,
+  LogoutOutlined,
 } from '@ant-design/icons'
+import { useAuthStore } from '../store/authStore'
 
 const { Header, Sider, Content } = Layout
 
 const MainLayout: React.FC = () => {
   const navigate = useNavigate()
+  const { clearAuth } = useAuthStore()
+
+  const handleLogout = () => {
+    clearAuth()
+    navigate('/login')
+  }
 
   const menuItems = [
     { key: 'dashboard', icon: <DashboardOutlined />, label: '仪表盘' },
@@ -41,8 +49,13 @@ const MainLayout: React.FC = () => {
         />
       </Sider>
       <Layout>
-        <Header style={{ background: '#fff', padding: '0 24px' }}>
+        <Header style={{ background: '#fff', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0 }}>健身房管理系统</h2>
+          <Space>
+            <Button type="text" icon={<LogoutOutlined />} onClick={handleLogout}>
+              退出登录
+            </Button>
+          </Space>
         </Header>
         <Content style={{ margin: '24px 16px', padding: 24, background: '#fff' }}>
           <Outlet />

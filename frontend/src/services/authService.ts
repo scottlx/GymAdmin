@@ -6,8 +6,12 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string
-  user: any
+  code: number
+  message: string
+  data: {
+    token: string
+    user: any
+  }
 }
 
 export const authService = {

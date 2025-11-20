@@ -30,3 +30,31 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# Backend
+backend/logs/
+backend/tmp/
+backend/gym-admin
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# Database
+*.sql
+*.db

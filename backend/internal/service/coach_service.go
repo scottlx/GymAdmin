@@ -70,3 +70,7 @@ func (s *CoachService) DeleteCoach(id int64) error {
 func (s *CoachService) generateCoachNo() string {
 	return fmt.Sprintf("C%d", time.Now().UnixNano()/1000000)
 }
+
+func (s *CoachService) GetAllCoaches() ([]models.Coach, error) {
+	return s.repo.GetAll()
+}

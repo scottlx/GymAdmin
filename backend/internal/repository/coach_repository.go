@@ -50,3 +50,9 @@ func (r *CoachRepository) Update(coach *models.Coach) error {
 func (r *CoachRepository) Delete(id int64) error {
 	return r.db.Delete(&models.Coach{}, id).Error
 }
+
+func (r *CoachRepository) GetAll() ([]models.Coach, error) {
+	var coaches []models.Coach
+	err := r.db.Find(&coaches).Error
+	return coaches, err
+}

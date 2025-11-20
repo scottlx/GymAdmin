@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gym-admin/internal/config"
 	"gym-admin/internal/models"
+	"log"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -30,6 +31,11 @@ func InitDB(cfg config.DatabaseConfig) error {
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 
+	// Seed initial data
+	if err := seedData(); err != nil {
+		return fmt.Errorf("failed to seed data: %w", err)
+	}
+
 	return nil
 }
 
@@ -46,6 +52,31 @@ func autoMigrate() error {
 		&models.FaceRecord{},
 		&models.VoucherRecord{},
 	)
+}
+
+// seedData creates initial test data if database is empty
+func seedData() error {
+	// Check if admin user exists
+	var count int64
+	DB.Model(&models.User{}).Where("phone = ?", "admin").Count(&count)
+	if count > 0 {
+		return nil // Admin already exists
+	}
+
+	// Create admin user
+	adminUser := &models.User{
+		Name:   "管理员",
+		Phone:  "admin",
+		Gender: 1,
+		Status: 1,
+	}
+
+	if err := DB.Create(adminUser).Error; err != nil {
+		return fmt.Errorf("failed to create admin user: %w", err)
+	}
+
+	log.Println("Created admin user: phone=admin, password=admin123")
+	return nil
 }
 
 func GetDB() *gorm.DB {

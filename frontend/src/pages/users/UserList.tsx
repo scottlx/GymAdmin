@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Table, Button, Space, message, Modal, Form, Input, Select } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import { userService, User } from '../../services/userService'
+import { useNavigate } from 'react-router-dom'
 
 const UserList: React.FC = () => {
   const [users, setUsers] = useState<User[]>([])
@@ -11,6 +12,7 @@ const UserList: React.FC = () => {
   const [pageSize, setPageSize] = useState(10)
   const [modalVisible, setModalVisible] = useState(false)
   const [form] = Form.useForm()
+  const navigate = useNavigate()
 
   const columns = [
     { title: '用户编号', dataIndex: 'user_no', key: 'user_no' },
@@ -63,16 +65,7 @@ const UserList: React.FC = () => {
   }
 
   const handleView = (record: User) => {
-    Modal.info({
-      title: '用户详情',
-      content: (
-        <div>
-          <p>姓名: {record.name}</p>
-          <p>手机号: {record.phone}</p>
-          <p>用户编号: {record.user_no}</p>
-        </div>
-      ),
-    })
+    navigate(`/users/${record.id}`)
   }
 
   const handleDelete = async (id: number) => {

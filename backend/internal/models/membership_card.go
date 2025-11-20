@@ -57,3 +57,22 @@ type MembershipCard struct {
 func (MembershipCard) TableName() string {
 	return "membership_cards"
 }
+
+// CardOperation 会员卡操作记录
+type CardOperation struct {
+	ID            int64     `gorm:"primaryKey;autoIncrement" json:"id"`
+	CardID        int64     `gorm:"index;not null" json:"card_id"`
+	OperationType int8      `gorm:"type:tinyint;not null;index" json:"operation_type"` // 1-续费，2-冻结，3-解冻，4-转卡，5-退卡
+	OperatorID    int64     `gorm:"not null" json:"operator_id"`
+	Amount        float64   `gorm:"type:decimal(10,2)" json:"amount"`
+	OldEndDate    time.Time `gorm:"type:date" json:"old_end_date"`
+	NewEndDate    time.Time `gorm:"type:date" json:"new_end_date"`
+	FreezeDays    int       `json:"freeze_days"`
+	TransferToID  *int64    `json:"transfer_to_id"` // 转卡目标用户ID
+	Remark        string    `gorm:"type:text" json:"remark"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+func (CardOperation) TableName() string {
+	return "card_operations"
+}

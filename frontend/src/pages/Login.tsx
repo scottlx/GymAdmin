@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Form, Input, Button, Card, message } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
@@ -7,14 +7,21 @@ import { useAuthStore } from '../store/authStore'
 
 const Login: React.FC = () => {
   const navigate = useNavigate()
-  const { setAuth } = useAuthStore()
+  const { token, setAuth } = useAuthStore()
   const [loading, setLoading] = useState(false)
+
+  // If already logged in, redirect to dashboard
+  useEffect(() => {
+    if (token) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [token, navigate])
 
   const onFinish = async (values: any) => {
     setLoading(true)
     try {
       const response = await authService.login(values)
-      setAuth(response.token, response.user)
+      setAuth(response.data.token, response.data.user)
       message.success('登录成功')
       navigate('/dashboard')
     } catch (error: any) {

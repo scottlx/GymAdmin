@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Table, Button, Space, message, Modal, Form, Input, Select } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import { coachService, Coach } from '../../services/coachService'
+import { useNavigate } from 'react-router-dom'
 
 const CoachList: React.FC = () => {
   const [coaches, setCoaches] = useState<Coach[]>([])
@@ -11,6 +12,7 @@ const CoachList: React.FC = () => {
   const [pageSize, setPageSize] = useState(10)
   const [modalVisible, setModalVisible] = useState(false)
   const [form] = Form.useForm()
+  const navigate = useNavigate()
 
   const columns = [
     { title: '教练编号', dataIndex: 'coach_no', key: 'coach_no' },
@@ -59,17 +61,7 @@ const CoachList: React.FC = () => {
   }
 
   const handleView = (record: Coach) => {
-    Modal.info({
-      title: '教练详情',
-      content: (
-        <div>
-          <p>姓名: {record.name}</p>
-          <p>手机号: {record.phone}</p>
-          <p>教练编号: {record.coach_no}</p>
-          <p>工作年限: {record.experience}年</p>
-        </div>
-      ),
-    })
+    navigate(`/coaches/${record.id}`)
   }
 
   const handleDelete = async (id: number) => {

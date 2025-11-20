@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   mysql:
-    image: mysql:8.0
+    image: docker.1ms.run/library/mysql:8.0
     container_name: gym-admin-mysql
     environment:
       MYSQL_ROOT_PASSWORD: password
@@ -17,7 +17,7 @@ services:
       - gym-network
 
   redis:
-    image: redis:6.0-alpine
+    image: docker.1ms.run/library/redis:6.0-alpine
     container_name: gym-admin-redis
     ports:
       - "6379:6379"

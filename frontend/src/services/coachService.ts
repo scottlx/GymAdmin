@@ -14,10 +14,14 @@ export interface Coach {
 }
 
 export interface CoachListResponse {
-  list: Coach[]
-  total: number
-  page: number
-  page_size: number
+  code: number
+  message: string
+  data: {
+    list: Coach[]
+    total: number
+    page: number
+    page_size: number
+  }
 }
 
 export const coachService = {

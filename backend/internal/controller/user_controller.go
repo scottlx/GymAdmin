@@ -132,3 +132,173 @@ func (ctrl *UserController) GetUserStats(c *gin.Context) {
 
 	response.Success(c, stats)
 }
+
+// FreezeUser freezes a user account
+func (ctrl *UserController) FreezeUser(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "Invalid user ID")
+		return
+	}
+
+	var req StatusChangeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	if err := ctrl.service.FreezeUser(id, req.Reason, req.OperatorID); err != nil {
+		response.Error(c, 400, err.Error())
+		return
+	}
+
+	response.SuccessWithMessage(c, "User frozen successfully", nil)
+}
+
+// UnfreezeUser unfreezes a user account
+func (ctrl *UserController) UnfreezeUser(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "Invalid user ID")
+		return
+	}
+
+	var req StatusChangeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	if err := ctrl.service.UnfreezeUser(id, req.Reason, req.OperatorID); err != nil {
+		response.Error(c, 400, err.Error())
+		return
+	}
+
+	response.SuccessWithMessage(c, "User unfrozen successfully", nil)
+}
+
+// AddToBlacklist adds a user to blacklist
+func (ctrl *UserController) AddToBlacklist(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "Invalid user ID")
+		return
+	}
+
+	var req StatusChangeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	if err := ctrl.service.AddToBlacklist(id, req.Reason, req.OperatorID); err != nil {
+		response.Error(c, 400, err.Error())
+		return
+	}
+
+	response.SuccessWithMessage(c, "User added to blacklist successfully", nil)
+}
+
+// RemoveFromBlacklist removes a user from blacklist
+func (ctrl *UserController) RemoveFromBlacklist(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "Invalid user ID")
+		return
+	}
+
+	var req StatusChangeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	if err := ctrl.service.RemoveFromBlacklist(id, req.Reason, req.OperatorID); err != nil {
+		response.Error(c, 400, err.Error())
+		return
+	}
+
+	response.SuccessWithMessage(c, "User removed from blacklist successfully", nil)
+}
+
+// GetStatusLogs gets status change logs for a user
+func (ctrl *UserController) GetStatusLogs(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "Invalid user ID")
+		return
+	}
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
+
+	logs, total, err := ctrl.service.GetStatusLogs(id, page, pageSize)
+	if err != nil {
+		response.InternalServerError(c, "Failed to get status logs")
+		return
+	}
+
+	response.Success(c, gin.H{
+		"list":      logs,
+		"total":     total,
+		"page":      page,
+		"page_size": pageSize,
+	})
+}
+
+// GetUserStatusSummary gets a summary of user counts by status
+func (ctrl *UserController) GetUserStatusSummary(c *gin.Context) {
+	summary, err := ctrl.service.GetUserStatusSummary()
+	if err != nil {
+		response.InternalServerError(c, "Failed to get status summary")
+		return
+	}
+
+	response.Success(c, summary)
+}
+
+// BatchFreezeUsers freezes multiple users
+func (ctrl *UserController) BatchFreezeUsers(c *gin.Context) {
+	var req BatchStatusChangeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	result, err := ctrl.service.BatchFreezeUsers(req.UserIDs, req.Reason, req.OperatorID)
+	if err != nil {
+		response.InternalServerError(c, "Failed to freeze users")
+		return
+	}
+
+	response.Success(c, result)
+}
+
+// BatchUnfreezeUsers unfreezes multiple users
+func (ctrl *UserController) BatchUnfreezeUsers(c *gin.Context) {
+	var req BatchStatusChangeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+
+	result, err := ctrl.service.BatchUnfreezeUsers(req.UserIDs, req.Reason, req.OperatorID)
+	if err != nil {
+		response.InternalServerError(c, "Failed to unfreeze users")
+		return
+	}
+
+	response.Success(c, result)
+}
+
+// Request structs
+type StatusChangeRequest struct {
+	Reason     string `json:"reason" binding:"required"`
+	OperatorID *int64 `json:"operator_id"`
+}
+
+type BatchStatusChangeRequest struct {
+	UserIDs    []int64 `json:"user_ids" binding:"required"`
+	Reason     string  `json:"reason" binding:"required"`
+	OperatorID *int64  `json:"operator_id"`
+}

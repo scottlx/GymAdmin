@@ -49,3 +49,40 @@ type UserTrainingStats struct {
 func (UserTrainingStats) TableName() string {
 	return "user_training_stats"
 }
+
+// UserStatusLog records user status changes
+type UserStatusLog struct {
+	ID         int64          `gorm:"primaryKey;autoIncrement" json:"id"`
+	UserID     int64          `gorm:"index;not null" json:"user_id"`
+	OldStatus  int8           `gorm:"type:tinyint" json:"old_status"` // 1-正常，2-冻结，3-黑名单
+	NewStatus  int8           `gorm:"type:tinyint" json:"new_status"` // 1-正常，2-冻结，3-黑名单
+	Reason     string         `gorm:"type:text" json:"reason"`
+	OperatorID *int64         `gorm:"index" json:"operator_id"` // 操作人ID
+	CreatedAt  time.Time      `json:"created_at"`
+	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
+func (UserStatusLog) TableName() string {
+	return "user_status_logs"
+}
+
+// Status constants
+const (
+	UserStatusActive    = 1 // 正常
+	UserStatusFrozen    = 2 // 冻结
+	UserStatusBlacklist = 3 // 黑名单
+)
+
+// GetStatusText returns the text representation of status
+func GetUserStatusText(status int8) string {
+	switch status {
+	case UserStatusActive:
+		return "正常"
+	case UserStatusFrozen:
+		return "冻结"
+	case UserStatusBlacklist:
+		return "黑名单"
+	default:
+		return "未知"
+	}
+}

@@ -12,10 +12,14 @@ export interface User {
 }
 
 export interface UserListResponse {
-  list: User[]
-  total: number
-  page: number
-  page_size: number
+  code: number
+  message: string
+  data: {
+    list: User[]
+    total: number
+    page: number
+    page_size: number
+  }
 }
 
 export const userService = {

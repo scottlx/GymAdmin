@@ -103,6 +103,148 @@ func (s *UserService) GetUserStats(userID int64) (*models.UserTrainingStats, err
 	return s.repo.GetStats(userID)
 }
 
+// ChangeUserStatus changes user status and logs the change
+func (s *UserService) ChangeUserStatus(userID int64, newStatus int8, reason string, operatorID *int64) error {
+	// Validate status
+	if newStatus < models.UserStatusActive || newStatus > models.UserStatusBlacklist {
+		return errors.New("invalid status value")
+	}
+
+	// Get user
+	user, err := s.repo.GetByID(userID)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	// Check if status is already the same
+	if user.Status == newStatus {
+		return errors.New("user is already in this status")
+	}
+
+	oldStatus := user.Status
+
+	// Update user status
+	user.Status = newStatus
+	if err := s.repo.Update(user); err != nil {
+		return err
+	}
+
+	// Create status log
+	log := &models.UserStatusLog{
+		UserID:     userID,
+		OldStatus:  oldStatus,
+		NewStatus:  newStatus,
+		Reason:     reason,
+		OperatorID: operatorID,
+	}
+	if err := s.repo.CreateStatusLog(log); err != nil {
+		// Log error but don't fail the operation
+		// TODO: Add proper logging
+	}
+
+	return nil
+}
+
+// FreezeUser freezes a user account
+func (s *UserService) FreezeUser(userID int64, reason string, operatorID *int64) error {
+	return s.ChangeUserStatus(userID, models.UserStatusFrozen, reason, operatorID)
+}
+
+// UnfreezeUser unfreezes a user account (set to active)
+func (s *UserService) UnfreezeUser(userID int64, reason string, operatorID *int64) error {
+	return s.ChangeUserStatus(userID, models.UserStatusActive, reason, operatorID)
+}
+
+// AddToBlacklist adds a user to blacklist
+func (s *UserService) AddToBlacklist(userID int64, reason string, operatorID *int64) error {
+	return s.ChangeUserStatus(userID, models.UserStatusBlacklist, reason, operatorID)
+}
+
+// RemoveFromBlacklist removes a user from blacklist (set to active)
+func (s *UserService) RemoveFromBlacklist(userID int64, reason string, operatorID *int64) error {
+	return s.ChangeUserStatus(userID, models.UserStatusActive, reason, operatorID)
+}
+
+// GetStatusLogs gets status change logs for a user
+func (s *UserService) GetStatusLogs(userID int64, page, pageSize int) ([]models.UserStatusLog, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+	return s.repo.GetStatusLogs(userID, page, pageSize)
+}
+
+// GetUserStatusSummary gets a summary of user counts by status
+func (s *UserService) GetUserStatusSummary() (map[string]interface{}, error) {
+	activeCount, err := s.repo.CountByStatus(models.UserStatusActive)
+	if err != nil {
+		return nil, err
+	}
+
+	frozenCount, err := s.repo.CountByStatus(models.UserStatusFrozen)
+	if err != nil {
+		return nil, err
+	}
+
+	blacklistCount, err := s.repo.CountByStatus(models.UserStatusBlacklist)
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]interface{}{
+		"active":    activeCount,
+		"frozen":    frozenCount,
+		"blacklist": blacklistCount,
+		"total":     activeCount + frozenCount + blacklistCount,
+	}, nil
+}
+
+// BatchFreezeUsers freezes multiple users
+func (s *UserService) BatchFreezeUsers(userIDs []int64, reason string, operatorID *int64) (map[string]interface{}, error) {
+	successCount := 0
+	failedCount := 0
+	errors := make([]string, 0)
+
+	for _, userID := range userIDs {
+		if err := s.FreezeUser(userID, reason, operatorID); err != nil {
+			failedCount++
+			errors = append(errors, fmt.Sprintf("User %d: %s", userID, err.Error()))
+		} else {
+			successCount++
+		}
+	}
+
+	return map[string]interface{}{
+		"success_count": successCount,
+		"failed_count":  failedCount,
+		"errors":        errors,
+	}, nil
+}
+
+// BatchUnfreezeUsers unfreezes multiple users
+func (s *UserService) BatchUnfreezeUsers(userIDs []int64, reason string, operatorID *int64) (map[string]interface{}, error) {
+	successCount := 0
+	failedCount := 0
+	errors := make([]string, 0)
+
+	for _, userID := range userIDs {
+		if err := s.UnfreezeUser(userID, reason, operatorID); err != nil {
+			failedCount++
+			errors = append(errors, fmt.Sprintf("User %d: %s", userID, err.Error()))
+		} else {
+			successCount++
+		}
+	}
+
+	return map[string]interface{}{
+		"success_count": successCount,
+		"failed_count":  failedCount,
+		"errors":        errors,
+	}, nil
+}
+
 // generateUserNo generates a unique user number
 func (s *UserService) generateUserNo() string {
 	return fmt.Sprintf("U%s%04d", time.Now().Format("20060102"), time.Now().Unix()%10000)
